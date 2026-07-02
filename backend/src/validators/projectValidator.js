@@ -16,3 +16,18 @@ export const createProjectSchema = z.object({
         .string()
         .uuid("Invalid organization id")
 });
+
+
+export const updateProjectSchema = z.object({
+    name: z
+        .string()
+        .trim()
+        .min(2)
+        .optional(),
+
+    description: z
+        .string()
+        .trim()
+        .max(1000)
+        .optional()
+});

@@ -24,7 +24,32 @@ export const findProjectById = async (projectId) => {
         }
     });
 };
-export const countProjectsByOrganization = async (organizationId) => {
+
+export const updateProjectById = async (
+    projectId,
+    data
+) => {
+    return prisma.project.update({
+        where: {
+            id: projectId
+        },
+        data
+    });
+};
+
+export const deleteProjectById = async (
+    projectId
+) => {
+    return prisma.project.delete({
+        where: {
+            id: projectId
+        }
+    });
+};
+
+export const countProjectsByOrganization = async (
+    organizationId
+) => {
     return prisma.project.count({
         where: {
             organizationId
