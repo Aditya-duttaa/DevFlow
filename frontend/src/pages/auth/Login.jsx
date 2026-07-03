@@ -16,27 +16,32 @@ const schema = z.object({
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login: loginStore } = useAuthStore();
 
-  const [showPassword, setShowPassword] = useState(false);
+  const { login: loginStore } =
+    useAuthStore();
+
+  const [showPassword, setShowPassword] =
+    useState(false);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: {
+      errors,
+      isSubmitting,
+    },
   } = useForm({
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = async (values) => {
+  async function onSubmit(values) {
     try {
       const res = await login(values);
 
       const token =
         res.accessToken ||
         res.token ||
-        res.data?.accessToken ||
-        "";
+        res.data?.accessToken;
 
       const me = await getMe();
 
@@ -47,13 +52,16 @@ export default function Login() {
 
       toast.success("Login successful");
 
-      navigate("/");
+      navigate("/", {
+        replace: true,
+      });
     } catch (err) {
       toast.error(
-        err.response?.data?.message || "Login failed"
+        err.response?.data?.message ||
+          "Login failed"
       );
     }
-  };
+  }
 
   return (
     <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
@@ -72,18 +80,21 @@ export default function Login() {
       >
 
         <div>
+
           <label className="font-medium">
             Email
           </label>
 
           <input
             {...register("email")}
+            type="email"
             className="mt-2 w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500"
           />
 
-          <p className="text-red-500 text-sm mt-1">
+          <p className="text-sm text-red-500 mt-1">
             {errors.email?.message}
           </p>
+
         </div>
 
         <div>
@@ -107,7 +118,9 @@ export default function Login() {
             <button
               type="button"
               onClick={() =>
-                setShowPassword(!showPassword)
+                setShowPassword(
+                  !showPassword
+                )
               }
               className="absolute right-4 top-6"
             >
@@ -120,15 +133,16 @@ export default function Login() {
 
           </div>
 
-          <p className="text-red-500 text-sm mt-1">
+          <p className="text-sm text-red-500 mt-1">
             {errors.password?.message}
           </p>
 
         </div>
 
         <button
+          type="submit"
           disabled={isSubmitting}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg p-3 font-semibold"
+          className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg p-3 font-semibold"
         >
           {isSubmitting
             ? "Logging in..."
@@ -143,7 +157,7 @@ export default function Login() {
 
         <Link
           to="/signup"
-          className="text-indigo-600 ml-2"
+          className="ml-2 text-indigo-600 hover:underline"
         >
           Sign Up
         </Link>

@@ -13,11 +13,16 @@ import {
 export default function Projects() {
   const navigate = useNavigate();
 
-  const { currentOrganization, setCurrentProject } =
-    useWorkspaceStore();
+  const {
+    currentOrganization,
+    currentMember,
+    setCurrentProject,
+  } = useWorkspaceStore();
 
   const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(false);
+
+  const [loading, setLoading] =
+    useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -27,16 +32,21 @@ export default function Projects() {
   async function loadProjects() {
     if (!currentOrganization?.id) return;
 
-    setLoading(true);
-
     try {
-      const data = await getProjects(currentOrganization.id);
+      setLoading(true);
+
+      const data = await getProjects(
+        currentOrganization.id
+      );
+
       setProjects(data || []);
     } catch {
-      toast.error("Failed to load projects");
+      toast.error(
+        "Failed to load projects"
+      );
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   useEffect(() => {
@@ -47,22 +57,29 @@ export default function Projects() {
     e.preventDefault();
 
     if (!currentOrganization?.id) {
-      toast.error("Select an organization first");
+      toast.error(
+        "Select an organization first"
+      );
       return;
     }
 
     if (!form.name.trim()) {
-      toast.error("Project name is required");
+      toast.error(
+        "Project name is required"
+      );
       return;
     }
 
     try {
       await createProject({
         ...form,
-        organizationId: currentOrganization.id,
+        organizationId:
+          currentOrganization.id,
       });
 
-      toast.success("Project created");
+      toast.success(
+        "Project created"
+      );
 
       setForm({
         name: "",
@@ -72,24 +89,37 @@ export default function Projects() {
       loadProjects();
     } catch (e) {
       toast.error(
-        e.response?.data?.message || "Failed to create project"
+        e.response?.data?.message ||
+          "Failed to create project"
       );
     }
   }
 
   async function remove(id) {
-    if (!window.confirm("Delete this project?")) return;
+    if (
+      !window.confirm(
+        "Delete this project?"
+      )
+    )
+      return;
 
     try {
       await deleteProject(id);
 
-      toast.success("Project deleted");
-
       setProjects((prev) =>
-        prev.filter((p) => p.id !== id)
+        prev.filter(
+          (project) =>
+            project.id !== id
+        )
+      );
+
+      toast.success(
+        "Project deleted"
       );
     } catch {
-      toast.error("Delete failed");
+      toast.error(
+        "Delete failed"
+      );
     }
   }
 
@@ -101,7 +131,7 @@ export default function Projects() {
         </h2>
 
         <p className="text-gray-500 mt-3">
-          Please go to Organizations and open one first.
+          Please open an organization first.
         </p>
       </div>
     );
@@ -109,66 +139,94 @@ export default function Projects() {
 
   return (
     <div>
+
       <div className="mb-8">
+
         <h1 className="text-3xl font-bold">
           {currentOrganization.name}
         </h1>
 
-        <p className="text-gray-500">Manage Projects</p>
+        <p className="text-gray-500">
+          Manage Projects
+        </p>
+
       </div>
 
-      <form
-        onSubmit={create}
-        className="bg-white rounded-xl shadow p-6 mb-8"
-      >
-        <input
-          className="w-full border rounded-lg p-3 mb-4"
-          placeholder="Project Name"
-          value={form.name}
-          onChange={(e) =>
-            setForm({ ...form, name: e.target.value })
-          }
-        />
+      {(currentMember?.role === "OWNER" ||
+        currentMember?.role ===
+          "ADMIN" ||
+        currentMember?.role ===
+          "MANAGER") && (
 
-        <textarea
-          rows={4}
-          className="w-full border rounded-lg p-3 mb-4"
-          placeholder="Description"
-          value={form.description}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              description: e.target.value,
-            })
-          }
-        />
+        <form
+          onSubmit={create}
+          className="bg-white rounded-xl shadow p-6 mb-8"
+        >
 
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg">
-          Create Project
-        </button>
-      </form>
+          <input
+            className="w-full border rounded-lg p-3 mb-4"
+            placeholder="Project Name"
+            value={form.name}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                name: e.target.value,
+              })
+            }
+          />
+
+          <textarea
+            rows={4}
+            className="w-full border rounded-lg p-3 mb-4"
+            placeholder="Description"
+            value={form.description}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                description:
+                  e.target.value,
+              })
+            }
+          />
+
+          <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg">
+            Create Project
+          </button>
+
+        </form>
+
+      )}
 
       {loading ? (
-        <p>Loading...</p>
+        <div className="text-center py-10">
+          Loading...
+        </div>
       ) : (
         <div className="grid lg:grid-cols-3 gap-6">
+
           {projects.map((project) => (
+
             <div
               key={project.id}
               className="bg-white rounded-xl shadow p-6"
             >
+
               <h2 className="text-xl font-bold">
                 {project.name}
               </h2>
 
               <p className="text-gray-500 mt-3">
-                {project.description || "No description"}
+                {project.description ||
+                  "No description"}
               </p>
 
               <div className="flex gap-3 mt-6">
+
                 <button
                   onClick={() => {
-                    setCurrentProject(project);
+                    setCurrentProject(
+                      project
+                    );
                     navigate("/tasks");
                   }}
                   className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg py-2"
@@ -176,17 +234,31 @@ export default function Projects() {
                   Open
                 </button>
 
-                <button
-                  onClick={() => remove(project.id)}
-                  className="bg-red-500 hover:bg-red-600 text-white px-4 rounded-lg"
-                >
-                  Delete
-                </button>
+                {(currentMember?.role ===
+                  "OWNER" ||
+                  currentMember?.role ===
+                    "ADMIN") && (
+
+                  <button
+                    onClick={() =>
+                      remove(project.id)
+                    }
+                    className="bg-red-500 hover:bg-red-600 text-white px-4 rounded-lg"
+                  >
+                    Delete
+                  </button>
+
+                )}
+
               </div>
+
             </div>
+
           ))}
+
         </div>
       )}
+
     </div>
   );
 }

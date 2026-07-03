@@ -25,9 +25,11 @@ const useAuthStore = create((set) => ({
     });
   },
 
-  setUser: (user) => set({ user }),
+  setUser: (user) =>
+    set({
+      user,
+    }),
 
-  // ✅ ADD THIS HERE
   hydrate: () => {
     const token = localStorage.getItem("accessToken");
 
@@ -36,6 +38,11 @@ const useAuthStore = create((set) => ({
       isAuthenticated: !!token,
     });
   },
+
+  clearUser: () =>
+    set({
+      user: null,
+    }),
 }));
 
 export default useAuthStore;

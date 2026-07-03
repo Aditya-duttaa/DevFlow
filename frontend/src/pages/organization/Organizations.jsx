@@ -1,40 +1,38 @@
 import { useEffect, useState } from "react";
-import { Building2, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+
+import useAuthStore from "../../store/authStore";
 import useWorkspaceStore from "../../store/workspaceStore";
+
 import {
   createOrganization,
   getOrganizations,
+  getOrganization,
 } from "../../api/organizationApi";
 
+import CreateOrganizationModal from "../../components/organization/CreateOrganizationModal";
+import OrganizationCard from "../../components/organization/OrganizationCard";
+
 export default function Organizations() {
-  const navigate = useNavigate();
-  const { setCurrentOrganization } = useWorkspaceStore();
+  const {
+    setCurrentOrganization,
+    setCurrentMember,
+  } = useWorkspaceStore();
+
+  const user = useAuthStore((state) => state.user);
+
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [showModal, setShowModal] =
-    useState(false);
-
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-  });
-
   async function loadOrganizations() {
     try {
-      const res = await getOrganizations();
+      setLoading(true);
 
-      setOrganizations(
-        res.organizations ||
-          res.data ||
-          res
-      );
+      const data = await getOrganizations();
+
+      setOrganizations(data);
     } catch {
-      toast.error(
-        "Failed to fetch organizations"
-      );
+      toast.error("Failed to load organizations");
     }
 
     setLoading(false);
@@ -44,164 +42,84 @@ export default function Organizations() {
     loadOrganizations();
   }, []);
 
-  async function submit(e) {
-    e.preventDefault();
-
+  async function create(data) {
     try {
-      await createOrganization(form);
+      const organization = await createOrganization(data);
+
+      toast.success("Organization created");
+
+      setOrganizations((prev) => [
+        organization,
+        ...prev,
+      ]);
+    } catch (e) {
+      toast.error(
+        e.response?.data?.message ||
+          "Creation failed"
+      );
+    }
+  }
+
+  async function openOrganization(org) {
+    try {
+      const fullOrg = await getOrganization(org.id);
+
+      const member =
+        fullOrg.members.find(
+          (m) => m.userId === user?.id
+        ) || null;
+
+      setCurrentOrganization(fullOrg);
+      setCurrentMember(member);
 
       toast.success(
-        "Organization Created"
+        `${fullOrg.name} selected`
       );
-
-      setForm({
-        name: "",
-        description: "",
-      });
-
-      setShowModal(false);
-
-      loadOrganizations();
-    } catch (err) {
+      navigate("/");
+    } catch {
       toast.error(
-        err.response?.data?.message
+        "Failed to open organization"
       );
     }
   }
 
   return (
     <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">
+          Organizations
+        </h1>
 
-      <div className="flex justify-between items-center mb-8">
-
-        <div>
-
-          <h1 className="text-3xl font-bold">
-            Organizations
-          </h1>
-
-          <p className="text-gray-500">
-            Manage your workspace
-          </p>
-
-        </div>
-
-        <button
-          onClick={() =>
-            setShowModal(true)
-          }
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-lg flex items-center gap-2"
-        >
-          <Plus size={20} />
-          Organization
-        </button>
-
+        <p className="text-gray-500">
+          Create and manage workspaces
+        </p>
       </div>
 
+      <CreateOrganizationModal
+        onCreate={create}
+      />
+
       {loading ? (
-        <p>Loading...</p>
+        <h2>Loading...</h2>
       ) : organizations.length === 0 ? (
-        <div className="bg-white rounded-xl shadow p-20 text-center">
-
-          <Building2
-            size={60}
-            className="mx-auto text-gray-400"
-          />
-
-          <h2 className="mt-4 text-2xl font-semibold">
+        <div className="bg-white rounded-xl shadow p-10 text-center">
+          <h2 className="text-2xl font-bold">
             No Organizations
           </h2>
 
+          <p className="text-gray-500 mt-3">
+            Create your first organization.
+          </p>
         </div>
       ) : (
         <div className="grid lg:grid-cols-3 gap-6">
-
-          {organizations.map((org) => (
-            <div
-              key={org.id}
-              className="bg-white rounded-xl shadow p-6"
-            >
-              <h2 className="font-bold text-xl">
-                {org.name}
-              </h2>
-
-              <p className="mt-3 text-gray-500">
-                {org.description}
-              </p>
-
-<button
-  onClick={() => {
-    setCurrentOrganization(org);
-    navigate("/projects");
-  }}
-  className="mt-6 w-full rounded-lg bg-indigo-600 py-3 text-white hover:bg-indigo-700"
->
-  Open Workspace
-</button>
-            </div>
+          {organizations.map((organization) => (
+            <OrganizationCard
+              key={organization.id}
+              organization={organization}
+              onOpen={openOrganization}
+            />
           ))}
-
-        </div>
-      )}
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
-
-          <form
-            onSubmit={submit}
-            className="bg-white rounded-xl p-8 w-[450px]"
-          >
-
-            <h2 className="text-2xl font-bold mb-5">
-              Create Organization
-            </h2>
-
-            <input
-              placeholder="Name"
-              value={form.name}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  name: e.target.value,
-                })
-              }
-              className="w-full border rounded-lg p-3 mb-4"
-            />
-
-            <textarea
-              placeholder="Description"
-              rows={4}
-              value={form.description}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  description:
-                    e.target.value,
-                })
-              }
-              className="w-full border rounded-lg p-3"
-            />
-
-            <div className="flex justify-end gap-3 mt-6">
-
-              <button
-                type="button"
-                onClick={() =>
-                  setShowModal(false)
-                }
-                className="border px-5 py-2 rounded-lg"
-              >
-                Cancel
-              </button>
-
-              <button className="bg-indigo-600 text-white px-5 py-2 rounded-lg">
-                Create
-              </button>
-
-            </div>
-
-          </form>
-
         </div>
       )}
     </div>

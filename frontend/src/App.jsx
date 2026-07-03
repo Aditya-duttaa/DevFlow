@@ -1,111 +1,124 @@
-import { Routes, Route } from "react-router-dom";
-import Layout from "./layout/Layout";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+
+import useAuthStore from "./store/authStore";
+import useWorkspaceStore from "./store/workspaceStore";
+
+import ProtectedRoute from "./routes/ProtectedRoute";
+import RoleGuard from "./routes/RoleGuard";
+
+import DashboardLayout from "./layouts/DashboardLayout";
+import AuthLayout from "./layouts/AuthLayout";
+
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
+
 import Dashboard from "./pages/dashboard/Dashboard";
-import Projects from "./pages/projects/Projects";
-import Tasks from "./pages/tasks/Tasks";
+import Projects from "./pages/project/Projects";
+import Tasks from "./pages/task/Tasks";
 import TaskDetails from "./pages/task/TaskDetails";
 import Notifications from "./pages/notification/Notifications";
 import Activity from "./pages/activity/Activity";
 import OrganizationDetails from "./pages/organization/OrganizationDetails";
-import RoleGuard from "./routes/RoleGuard";
-import ProtectedRoute from "./routes/ProtectedRoute";
-import Layout from "./components/Layout";
-import Projects from "./pages/Projects";
-import Organizations from "./pages/Organizations";
-import { useEffect } from "react";
-import useAuthStore from "./store/useAuthStore";
+
+/* 🔥 NEW: Org Guard */
+function OrgGuard({ children }) {
+  const { currentOrganization } = useWorkspaceStore();
+
+  if (!currentOrganization) {
+    return <Navigate to="/organization" replace />;
+  }
+
+  return children;
+}
 
 export default function App() {
-    useEffect(() => {
+  useEffect(() => {
     useAuthStore.getState().hydrate();
   }, []);
+
   return (
     <Routes>
-
       {/* Public */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
+      <Route element={<AuthLayout />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+      </Route>
 
       {/* Protected */}
       <Route
-        path="/"
         element={
           <ProtectedRoute>
-            <Layout>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route
+          path="/"
+          element={
+            <OrgGuard>
               <Dashboard />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
+            </OrgGuard>
+          }
+        />
 
-      <Route
-        path="/projects"
-        element={
-          <ProtectedRoute>
-            <Layout>
+        <Route
+          path="/projects"
+          element={
+            <OrgGuard>
               <Projects />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
+            </OrgGuard>
+          }
+        />
 
-      <Route
-        path="/tasks"
-        element={
-          <ProtectedRoute>
-            <Layout>
+        <Route
+          path="/tasks"
+          element={
+            <OrgGuard>
               <Tasks />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
+            </OrgGuard>
+          }
+        />
 
-      <Route
-        path="/tasks/:taskId"
-        element={
-          <ProtectedRoute>
-            <Layout>
+        <Route
+          path="/tasks/:taskId"
+          element={
+            <OrgGuard>
               <TaskDetails />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
+            </OrgGuard>
+          }
+        />
 
-      <Route
-        path="/notifications"
-        element={
-          <ProtectedRoute>
-            <Layout>
+        <Route
+          path="/notifications"
+          element={
+            <OrgGuard>
               <Notifications />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
+            </OrgGuard>
+          }
+        />
 
-      <Route
-        path="/activity"
-        element={
-          <ProtectedRoute>
-            <Layout>
+        <Route
+          path="/activity"
+          element={
+            <OrgGuard>
               <Activity />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
+            </OrgGuard>
+          }
+        />
 
-      <Route
-        path="/organization"
-        element={
-          <ProtectedRoute>
-            <Layout>
+        <Route
+          path="/organization"
+          element={
+            <RoleGuard allowedRoles={["OWNER", "ADMIN"]}>
               <OrganizationDetails />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
+            </RoleGuard>
+          }
+        />
+      </Route>
 
+      {/* fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

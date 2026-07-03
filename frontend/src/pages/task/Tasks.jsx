@@ -21,8 +21,10 @@ const columns = [
 export default function Tasks() {
   const navigate = useNavigate();
 
-  const { currentProject } =
-    useWorkspaceStore();
+  const {
+    currentProject,
+    currentMember,
+  } = useWorkspaceStore();
 
   const [tasks, setTasks] = useState([]);
 
@@ -35,23 +37,23 @@ export default function Tasks() {
   });
 
   async function loadTasks() {
-    if (!currentProject) return;
-
-    setLoading(true);
+    if (!currentProject?.id) return;
 
     try {
+      setLoading(true);
+
       const data = await getTasks(
         currentProject.id
       );
 
-      setTasks(data);
+      setTasks(data || []);
     } catch {
       toast.error(
         "Failed to load tasks"
       );
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   useEffect(() => {
@@ -61,13 +63,22 @@ export default function Tasks() {
   async function create(e) {
     e.preventDefault();
 
+    if (!form.title.trim()) {
+      toast.error(
+        "Task title is required"
+      );
+      return;
+    }
+
     try {
       await createTask({
         ...form,
         projectId: currentProject.id,
       });
 
-      toast.success("Task Created");
+      toast.success(
+        "Task Created"
+      );
 
       setForm({
         title: "",
@@ -77,7 +88,8 @@ export default function Tasks() {
       loadTasks();
     } catch (e) {
       toast.error(
-        e.response?.data?.message
+        e.response?.data?.message ||
+          "Failed to create task"
       );
     }
   }
@@ -90,11 +102,21 @@ export default function Tasks() {
     )
       return;
 
-    await deleteTask(id);
+    try {
+      await deleteTask(id);
 
-    toast.success("Deleted");
+      setTasks((prev) =>
+        prev.filter(
+          (task) => task.id !== id
+        )
+      );
 
-    loadTasks();
+      toast.success("Deleted");
+    } catch {
+      toast.error(
+        "Delete failed"
+      );
+    }
   }
 
   async function nextStatus(task) {
@@ -105,26 +127,34 @@ export default function Tasks() {
       "DONE",
     ];
 
-    let index = order.indexOf(
+    const index = order.indexOf(
       task.status
     );
 
-    if (index === 3) return;
+    if (index === order.length - 1)
+      return;
 
-    await changeTaskStatus(
-      task.id,
-      order[index + 1]
-    );
+    try {
+      await changeTaskStatus(
+        task.id,
+        order[index + 1]
+      );
 
-    loadTasks();
+      loadTasks();
+    } catch {
+      toast.error(
+        "Failed to update status"
+      );
+    }
   }
 
-  if (!currentProject)
+  if (!currentProject) {
     return (
       <div className="bg-white rounded-xl shadow p-10 text-center">
         Select a Project First
       </div>
     );
+  }
 
   return (
     <div>
@@ -133,50 +163,61 @@ export default function Tasks() {
         {currentProject.name}
       </h1>
 
-      <form
-        onSubmit={create}
-        className="bg-white rounded-xl shadow p-6 mb-8"
-      >
+      {(currentMember?.role === "OWNER" ||
+        currentMember?.role ===
+          "ADMIN" ||
+        currentMember?.role ===
+          "MANAGER") && (
 
-        <input
-          placeholder="Task Title"
-          className="border p-3 rounded-lg w-full mb-4"
-          value={form.title}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              title:
-                e.target.value,
-            })
-          }
-        />
+        <form
+          onSubmit={create}
+          className="bg-white rounded-xl shadow p-6 mb-8"
+        >
 
-        <textarea
-          placeholder="Description"
-          rows={4}
-          className="border p-3 rounded-lg w-full mb-4"
-          value={form.description}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              description:
-                e.target.value,
-            })
-          }
-        />
+          <input
+            placeholder="Task Title"
+            className="border p-3 rounded-lg w-full mb-4"
+            value={form.title}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                title:
+                  e.target.value,
+              })
+            }
+          />
 
-        <button className="bg-indigo-600 text-white px-6 py-3 rounded-lg">
-          Create Task
-        </button>
+          <textarea
+            placeholder="Description"
+            rows={4}
+            className="border p-3 rounded-lg w-full mb-4"
+            value={form.description}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                description:
+                  e.target.value,
+              })
+            }
+          />
 
-      </form>
+          <button className="bg-indigo-600 text-white px-6 py-3 rounded-lg">
+            Create Task
+          </button>
+
+        </form>
+
+      )}
 
       {loading ? (
-        <p>Loading...</p>
+        <div className="text-center py-10">
+          Loading...
+        </div>
       ) : (
         <div className="grid grid-cols-4 gap-6">
 
           {columns.map((status) => (
+
             <div
               key={status}
               className="bg-slate-100 rounded-xl p-4"
@@ -193,11 +234,12 @@ export default function Tasks() {
 
                 {tasks
                   .filter(
-                    (t) =>
-                      t.status ===
+                    (task) =>
+                      task.status ===
                       status
                   )
                   .map((task) => (
+
                     <div
                       key={task.id}
                       className="bg-white rounded-lg shadow p-4"
@@ -208,9 +250,8 @@ export default function Tasks() {
                       </h3>
 
                       <p className="text-gray-500 mt-2 text-sm">
-                        {
-                          task.description
-                        }
+                        {task.description ||
+                          "No description"}
                       </p>
 
                       <div className="flex gap-2 mt-5">
@@ -228,6 +269,7 @@ export default function Tasks() {
 
                         {status !==
                           "DONE" && (
+
                           <button
                             onClick={() =>
                               nextStatus(
@@ -238,27 +280,37 @@ export default function Tasks() {
                           >
                             →
                           </button>
+
                         )}
 
-                        <button
-                          onClick={() =>
-                            remove(
-                              task.id
-                            )
-                          }
-                          className="bg-red-500 text-white px-3 rounded"
-                        >
-                          X
-                        </button>
+                        {(currentMember?.role ===
+                          "OWNER" ||
+                          currentMember?.role ===
+                            "ADMIN") && (
+
+                          <button
+                            onClick={() =>
+                              remove(
+                                task.id
+                              )
+                            }
+                            className="bg-red-500 text-white px-3 rounded"
+                          >
+                            X
+                          </button>
+
+                        )}
 
                       </div>
 
                     </div>
+
                   ))}
 
               </div>
 
             </div>
+
           ))}
 
         </div>

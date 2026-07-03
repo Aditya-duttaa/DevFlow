@@ -7,42 +7,41 @@ import { toast } from "sonner";
 import { signup } from "../../api/authApi";
 
 const schema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(6),
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Enter a valid email"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export default function Signup() {
-
   const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: {
+      errors,
+      isSubmitting,
+    },
   } = useForm({
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = async (values) => {
-
+  async function onSubmit(values) {
     try {
-
       await signup(values);
 
-      toast.success("Account created");
+      toast.success("Account created successfully");
 
-      navigate("/login");
-
+      navigate("/login", {
+        replace: true,
+      });
     } catch (err) {
-
       toast.error(
         err.response?.data?.message ||
           "Signup failed"
       );
-
     }
-  };
+  }
 
   return (
     <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
@@ -62,14 +61,17 @@ export default function Signup() {
 
         <div>
 
-          <label>Name</label>
+          <label className="font-medium">
+            Name
+          </label>
 
           <input
             {...register("name")}
-            className="w-full mt-2 border rounded-lg p-3"
+            type="text"
+            className="w-full mt-2 border rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500"
           />
 
-          <p className="text-red-500 text-sm">
+          <p className="text-sm text-red-500 mt-1">
             {errors.name?.message}
           </p>
 
@@ -77,14 +79,17 @@ export default function Signup() {
 
         <div>
 
-          <label>Email</label>
+          <label className="font-medium">
+            Email
+          </label>
 
           <input
             {...register("email")}
-            className="w-full mt-2 border rounded-lg p-3"
+            type="email"
+            className="w-full mt-2 border rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500"
           />
 
-          <p className="text-red-500 text-sm">
+          <p className="text-sm text-red-500 mt-1">
             {errors.email?.message}
           </p>
 
@@ -92,23 +97,26 @@ export default function Signup() {
 
         <div>
 
-          <label>Password</label>
+          <label className="font-medium">
+            Password
+          </label>
 
           <input
-            type="password"
             {...register("password")}
-            className="w-full mt-2 border rounded-lg p-3"
+            type="password"
+            className="w-full mt-2 border rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500"
           />
 
-          <p className="text-red-500 text-sm">
+          <p className="text-sm text-red-500 mt-1">
             {errors.password?.message}
           </p>
 
         </div>
 
         <button
+          type="submit"
           disabled={isSubmitting}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg p-3 font-semibold"
+          className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg p-3 font-semibold"
         >
           {isSubmitting
             ? "Creating..."
@@ -123,7 +131,7 @@ export default function Signup() {
 
         <Link
           to="/login"
-          className="text-indigo-600 ml-2"
+          className="ml-2 text-indigo-600 hover:underline"
         >
           Login
         </Link>

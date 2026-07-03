@@ -6,10 +6,10 @@ export const getNotifications = async () => {
 };
 
 export const markNotificationRead = async (
-  id
+  notificationId
 ) => {
   const res = await api.patch(
-    `/notifications/${id}/read`
+    `/notifications/${notificationId}/read`
   );
 
   return res.data.data;

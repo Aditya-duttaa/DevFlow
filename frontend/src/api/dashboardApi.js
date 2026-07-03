@@ -5,5 +5,5 @@ export const getDashboard = async (organizationId) => {
     `/dashboard/organization/${organizationId}`
   );
 
-  return res.data.data;
+  return res.data.data ?? res.data;
 };

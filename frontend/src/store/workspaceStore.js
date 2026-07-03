@@ -1,35 +1,38 @@
 import { create } from "zustand";
 
 const useWorkspaceStore = create((set) => ({
-  currentOrganization: null,
+  currentOrganization: JSON.parse(localStorage.getItem("org")) || null,
   currentProject: null,
+  currentMember: JSON.parse(localStorage.getItem("member")) || null,
 
-  // 👇 ADD THIS
-  currentMember: null,
+  setCurrentOrganization: (organization) => {
+    localStorage.setItem("org", JSON.stringify(organization));
 
-  setCurrentOrganization: (organization, userId) =>
     set({
       currentOrganization: organization,
       currentProject: null,
+    });
+  },
 
-      // 👇 derive logged-in member
-      currentMember:
-        organization?.members?.find(
-          (m) => m.userId === userId
-        ) || null,
-    }),
+  setCurrentMember: (member) => {
+    localStorage.setItem("member", JSON.stringify(member));
+
+    set({ currentMember: member });
+  },
 
   setCurrentProject: (project) =>
-    set({
-      currentProject: project,
-    }),
+    set({ currentProject: project }),
 
-  clearWorkspace: () =>
+  clearWorkspace: () => {
+    localStorage.removeItem("org");
+    localStorage.removeItem("member");
+
     set({
       currentOrganization: null,
       currentProject: null,
       currentMember: null,
-    }),
+    });
+  },
 }));
 
 export default useWorkspaceStore;

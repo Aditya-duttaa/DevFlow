@@ -1,23 +1,22 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+
 import useWorkspaceStore from "../../store/workspaceStore";
 
 import {
   getOrganization,
+  updateOrganization,
   inviteMember,
-  updateMemberRole,
   removeMember,
+  changeMemberRole,
 } from "../../api/organizationApi";
 
-const roles = [
-  "ADMIN",
-  "MANAGER",
-  "DEVELOPER",
-];
-
 export default function OrganizationDetails() {
-  const { currentOrganization } =
-    useWorkspaceStore();
+  const {
+    currentOrganization,
+    currentMember,
+    setCurrentOrganization,
+  } = useWorkspaceStore();
 
   const [organization, setOrganization] =
     useState(null);
@@ -25,50 +24,88 @@ export default function OrganizationDetails() {
   const [loading, setLoading] =
     useState(true);
 
-  const [invite, setInvite] = useState({
-    email: "",
-    role: "DEVELOPER",
-  });
+  const [editForm, setEditForm] =
+    useState({
+      name: "",
+      description: "",
+    });
+
+  const [inviteForm, setInviteForm] =
+    useState({
+      email: "",
+      role: "DEVELOPER",
+    });
 
   async function loadOrganization() {
-    if (!currentOrganization) return;
-
-    setLoading(true);
+    if (!currentOrganization?.id) return;
 
     try {
-      const data =
-        await getOrganization(
-          currentOrganization.id
-        );
+      setLoading(true);
+
+      const data = await getOrganization(
+        currentOrganization.id
+      );
 
       setOrganization(data);
-    } catch {
-      toast.error(
-        "Failed to load organization"
-      );
-    }
 
-    setLoading(false);
+      setCurrentOrganization(data);
+
+      setEditForm({
+        name: data.name,
+        description: data.description || "",
+      });
+    } catch (e) {
+      toast.error(
+        e.response?.data?.message ||
+          "Failed to load organization"
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
     loadOrganization();
   }, [currentOrganization]);
 
+  async function saveOrganization(e) {
+    e.preventDefault();
+
+    try {
+      const updated =
+        await updateOrganization(
+          organization.id,
+          editForm
+        );
+
+      setOrganization(updated);
+      setCurrentOrganization(updated);
+
+      toast.success(
+        "Organization updated"
+      );
+    } catch (e) {
+      toast.error(
+        e.response?.data?.message ||
+          "Update failed"
+      );
+    }
+  }
+
   async function addMember(e) {
     e.preventDefault();
 
     try {
       await inviteMember(
-        currentOrganization.id,
-        invite
+        organization.id,
+        inviteForm
       );
 
       toast.success(
-        "Member invited"
+        "Invitation sent"
       );
 
-      setInvite({
+      setInviteForm({
         email: "",
         role: "DEVELOPER",
       });
@@ -77,193 +114,320 @@ export default function OrganizationDetails() {
     } catch (e) {
       toast.error(
         e.response?.data?.message ||
-          "Failed"
+          "Failed to invite member"
       );
     }
   }
 
-  async function changeRole(
+  async function updateRole(
     memberId,
     role
   ) {
     try {
-      await updateMemberRole(
-        currentOrganization.id,
+      await changeMemberRole(
+        organization.id,
         memberId,
         role
       );
 
       toast.success(
-        "Role Updated"
+        "Role updated"
       );
 
       loadOrganization();
-    } catch {
+    } catch (e) {
       toast.error(
-        "Update Failed"
+        e.response?.data?.message ||
+          "Failed to update role"
       );
     }
   }
 
-  async function deleteMember(id) {
+  async function deleteMember(
+    memberId
+  ) {
     if (
       !window.confirm(
-        "Remove member?"
+        "Remove this member?"
       )
     )
       return;
 
     try {
       await removeMember(
-        currentOrganization.id,
-        id
+        organization.id,
+        memberId
       );
 
       toast.success(
-        "Member Removed"
+        "Member removed"
       );
 
       loadOrganization();
-    } catch {
+    } catch (e) {
       toast.error(
-        "Delete Failed"
+        e.response?.data?.message ||
+          "Failed to remove member"
       );
     }
   }
 
-  if (!currentOrganization)
+  if (!currentOrganization) {
     return (
-      <div className="text-center py-20">
-        Select an organization
+      <div className="bg-white rounded-xl shadow p-10 text-center">
+        Select an organization first.
       </div>
     );
+  }
 
-  if (loading)
+  if (loading) {
     return (
       <div className="text-center py-20">
         Loading...
       </div>
     );
+  }
+
+  if (!organization) {
+    return (
+      <div className="text-center py-20">
+        Organization not found.
+      </div>
+    );
+  }
 
   return (
     <div>
 
       <h1 className="text-3xl font-bold mb-8">
-        Organization Members
+        Organization Details
       </h1>
+            {(currentMember?.role === "OWNER" ||
+        currentMember?.role === "ADMIN") && (
 
-      <form
-        onSubmit={addMember}
-        className="bg-white rounded-xl shadow p-6 mb-8 grid md:grid-cols-3 gap-4"
-      >
-
-        <input
-          className="border rounded-lg p-3"
-          placeholder="Member Email"
-          value={invite.email}
-          onChange={(e) =>
-            setInvite({
-              ...invite,
-              email: e.target.value,
-            })
-          }
-        />
-
-        <select
-          className="border rounded-lg p-3"
-          value={invite.role}
-          onChange={(e) =>
-            setInvite({
-              ...invite,
-              role: e.target.value,
-            })
-          }
+        <form
+          onSubmit={saveOrganization}
+          className="bg-white rounded-xl shadow p-6 mb-8"
         >
-          {roles.map((role) => (
-            <option
-              key={role}
-              value={role}
-            >
-              {role}
+
+          <h2 className="text-xl font-semibold mb-4">
+            Edit Organization
+          </h2>
+
+          <input
+            className="border rounded-lg p-3 w-full mb-4"
+            value={editForm.name}
+            onChange={(e) =>
+              setEditForm({
+                ...editForm,
+                name: e.target.value,
+              })
+            }
+          />
+
+          <textarea
+            rows={3}
+            className="border rounded-lg p-3 w-full mb-4"
+            value={editForm.description}
+            onChange={(e) =>
+              setEditForm({
+                ...editForm,
+                description:
+                  e.target.value,
+              })
+            }
+          />
+
+          <button className="bg-indigo-600 text-white px-5 py-3 rounded-lg">
+            Save
+          </button>
+
+        </form>
+
+      )}
+
+      {(currentMember?.role === "OWNER" ||
+        currentMember?.role === "ADMIN") && (
+
+        <form
+          onSubmit={addMember}
+          className="bg-white rounded-xl shadow p-6 mb-8"
+        >
+
+          <h2 className="text-xl font-semibold mb-4">
+            Invite Member
+          </h2>
+
+          <input
+            className="border rounded-lg p-3 w-full mb-4"
+            placeholder="Email"
+            value={inviteForm.email}
+            onChange={(e) =>
+              setInviteForm({
+                ...inviteForm,
+                email: e.target.value,
+              })
+            }
+          />
+
+          <select
+            className="border rounded-lg p-3 w-full mb-4"
+            value={inviteForm.role}
+            onChange={(e) =>
+              setInviteForm({
+                ...inviteForm,
+                role: e.target.value,
+              })
+            }
+          >
+
+            <option value="ADMIN">
+              ADMIN
             </option>
-          ))}
-        </select>
 
-        <button className="bg-indigo-600 text-white rounded-lg">
-          Invite Member
-        </button>
+            <option value="MANAGER">
+              MANAGER
+            </option>
 
-      </form>
+            <option value="DEVELOPER">
+              DEVELOPER
+            </option>
 
-      <div className="space-y-4">
+          </select>
 
-        {organization.members.map(
-          (member) => (
-            <div
-              key={member.id}
-              className="bg-white rounded-xl shadow p-5 flex justify-between items-center"
-            >
+          <button className="bg-green-600 text-white px-5 py-3 rounded-lg">
+            Invite Member
+          </button>
 
-              <div>
+        </form>
 
-                <h2 className="font-semibold">
-                  {member.user.name}
-                </h2>
+      )}
 
-                <p className="text-gray-500">
-                  {member.user.email}
-                </p>
+      <div className="bg-white rounded-xl shadow p-6">
 
-              </div>
+        <h2 className="text-xl font-semibold mb-6">
+          Members
+        </h2>
 
-              <div className="flex gap-3 items-center">
+        <div className="overflow-x-auto">
 
-                <select
-                  value={member.role}
-                  onChange={(e) =>
-                    changeRole(
-                      member.id,
-                      e.target.value
-                    )
-                  }
-                  className="border rounded-lg p-2"
-                >
-                  <option value="OWNER">
-                    OWNER
-                  </option>
-                  <option value="ADMIN">
-                    ADMIN
-                  </option>
-                  <option value="MANAGER">
-                    MANAGER
-                  </option>
-                  <option value="DEVELOPER">
-                    DEVELOPER
-                  </option>
-                </select>
+          <table className="w-full">
 
-                {member.role !==
-                  "OWNER" && (
-                  <button
-                    onClick={() =>
-                      deleteMember(
-                        member.id
-                      )
-                    }
-                    className="bg-red-500 text-white px-4 py-2 rounded-lg"
-                  >
-                    Remove
-                  </button>
-                )}
+            <thead>
 
-              </div>
+              <tr className="border-b">
 
-            </div>
-          )
-        )}
+                <th className="text-left py-3">
+                  Name
+                </th>
+
+                <th className="text-left py-3">
+                  Email
+                </th>
+
+                <th className="text-left py-3">
+                  Role
+                </th>
+
+                <th className="text-left py-3">
+                  Actions
+                </th>
+
+              </tr>
+
+            </thead>
+
+            <tbody>
+                         {organization.members.map((member) => (
+
+              <tr
+                key={member.id}
+                className="border-b"
+              >
+
+                <td className="py-4">
+                  {member.user?.name}
+                </td>
+
+                <td className="py-4">
+                  {member.user?.email}
+                </td>
+
+                <td className="py-4">
+
+                  {(currentMember?.role === "OWNER" ||
+                    currentMember?.role === "ADMIN") ? (
+
+                    <select
+                      value={member.role}
+                      onChange={(e) =>
+                        updateRole(
+                          member.id,
+                          e.target.value
+                        )
+                      }
+                      className="border rounded px-3 py-2"
+                    >
+
+                      <option value="OWNER">
+                        OWNER
+                      </option>
+
+                      <option value="ADMIN">
+                        ADMIN
+                      </option>
+
+                      <option value="MANAGER">
+                        MANAGER
+                      </option>
+
+                      <option value="DEVELOPER">
+                        DEVELOPER
+                      </option>
+
+                    </select>
+
+                  ) : (
+
+                    <span className="bg-gray-100 px-3 py-1 rounded">
+                      {member.role}
+                    </span>
+
+                  )}
+
+                </td>
+
+                <td className="py-4">
+
+                  {(currentMember?.role === "OWNER" ||
+                    currentMember?.role === "ADMIN") &&
+                    member.role !== "OWNER" && (
+
+                      <button
+                        onClick={() =>
+                          deleteMember(member.id)
+                        }
+                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
+                      >
+                        Remove
+                      </button>
+
+                  )}
+
+                </td>
+
+              </tr>
+
+            ))}
+
+            </tbody>
+
+          </table>
+
+        </div>
 
       </div>
 
     </div>
   );
-}
+} 

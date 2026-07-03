@@ -3,34 +3,45 @@ import { toast } from "sonner";
 
 import useWorkspaceStore from "../../store/workspaceStore";
 import { getDashboard } from "../../api/dashboardApi";
+import DashboardCard from "../../components/dashboard/DashboardCard";
+import { useNavigate } from "react-router-dom";
+
 
 export default function Dashboard() {
-  const { currentOrganization } = useWorkspaceStore();
+  const { currentOrganization } =
+    useWorkspaceStore();
 
-  const [dashboard, setDashboard] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
+  const navigate = useNavigate();
+
+  const [stats, setStats] =
+    useState(null);
+
+  useEffect(() => {
+    if (currentOrganization) {
+      loadDashboard();
+    }
+  }, [currentOrganization]);
 
   async function loadDashboard() {
-    if (!currentOrganization) return;
-
-    setLoading(true);
-
     try {
+      setLoading(true);
+
       const data = await getDashboard(
         currentOrganization.id
       );
 
-      setDashboard(data);
-    } catch {
-      toast.error("Failed to load dashboard");
+      setStats(data);
+    } catch (e) {
+      toast.error(
+        e.response?.data?.message ||
+          "Failed to load dashboard"
+      );
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
-
-  useEffect(() => {
-    loadDashboard();
-  }, [currentOrganization]);
 
   if (!currentOrganization) {
     return (
@@ -39,8 +50,8 @@ export default function Dashboard() {
           No Organization Selected
         </h2>
 
-        <p className="mt-3 text-gray-500">
-          Please select an organization first.
+        <p className="text-gray-500 mt-2">
+          Please open an organization first.
         </p>
       </div>
     );
@@ -54,60 +65,74 @@ export default function Dashboard() {
     );
   }
 
-  const cards = [
-    {
-      title: "Projects",
-      value: dashboard.totalProjects,
-    },
-    {
-      title: "Tasks",
-      value: dashboard.totalTasks,
-    },
-    {
-      title: "Members",
-      value: dashboard.totalMembers,
-    },
-    {
-      title: "Todo",
-      value: dashboard.todoTasks,
-    },
-    {
-      title: "In Progress",
-      value: dashboard.inProgressTasks,
-    },
-    {
-      title: "In Review",
-      value: dashboard.inReviewTasks,
-    },
-    {
-      title: "Done",
-      value: dashboard.doneTasks,
-    },
-  ];
-
   return (
     <div>
 
-      <h1 className="text-4xl font-bold mb-10">
-        Dashboard
-      </h1>
+      <div className="mb-8">
 
-      <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <h1 className="text-3xl font-bold">
+          Dashboard
+        </h1>
 
-        {cards.map((card) => (
-          <div
-            key={card.title}
-            className="bg-white rounded-xl shadow p-6"
-          >
-            <h2 className="text-gray-500">
-              {card.title}
-            </h2>
+        <p className="text-gray-500 mt-2">
+          {currentOrganization.name}
+        </p>
 
-            <h1 className="text-4xl font-bold mt-4">
-              {card.value}
-            </h1>
-          </div>
-        ))}
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+
+        <DashboardCard
+          title="Projects"
+          value={stats?.totalProjects ?? 0}
+          color="bg-indigo-600"
+        />
+
+        <DashboardCard
+          title="Members"
+          value={stats?.totalMembers ?? 0}
+          color="bg-blue-600"
+        />
+
+        <DashboardCard
+          title="Tasks"
+          value={stats?.totalTasks ?? 0}
+          color="bg-green-600"
+        />
+
+        <DashboardCard
+          title="Completed"
+          value={stats?.doneTasks ?? 0}
+          color="bg-emerald-600"
+        />
+
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 mt-8">
+
+        <DashboardCard
+          title="Todo"
+          value={stats?.todoTasks ?? 0}
+          color="bg-red-500"
+        />
+
+        <DashboardCard
+          title="In Progress"
+          value={stats?.inProgressTasks ?? 0}
+          color="bg-yellow-500"
+        />
+
+        <DashboardCard
+          title="In Review"
+          value={stats?.inReviewTasks ?? 0}
+          color="bg-purple-600"
+        />
+
+        <DashboardCard
+          title="Done"
+          value={stats?.doneTasks ?? 0}
+          color="bg-teal-600"
+        />
 
       </div>
 
