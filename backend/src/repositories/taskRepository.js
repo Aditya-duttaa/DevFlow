@@ -1,8 +1,24 @@
 import prisma from "../config/prisma.js";
 
+const taskInclude = {
+    assignee: {
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    avatarUrl: true
+                }
+            }
+        }
+    }
+};
+
 export const createTask = async (data) => {
     return prisma.task.create({
-        data
+        data,
+        include: taskInclude
     });
 };
 
@@ -13,7 +29,8 @@ export const findTasksByProjectId = async (projectId) => {
         },
         orderBy: {
             createdAt: "desc"
-        }
+        },
+        include: taskInclude
     });
 };
 
@@ -21,7 +38,8 @@ export const findTaskById = async (taskId) => {
     return prisma.task.findUnique({
         where: {
             id: taskId
-        }
+        },
+        include: taskInclude
     });
 };
 
@@ -32,7 +50,8 @@ export const updateTaskStatus = async (taskId, status) => {
         },
         data: {
             status
-        }
+        },
+        include: taskInclude
     });
 };
 
@@ -43,7 +62,8 @@ export const assignTask = async (taskId, assigneeId) => {
         },
         data: {
             assigneeId
-        }
+        },
+        include: taskInclude
     });
 };
 
@@ -53,6 +73,7 @@ export const unassignTask = async (taskId) => {
     data: {
       assigneeId: null,
     },
+    include: taskInclude
   });
 };
 export const deleteTask = async (taskId) => {
@@ -67,14 +88,16 @@ export const updateTask = async (taskId, data) => {
         where: {
             id: taskId
         },
-        data
+        data,
+        include: taskInclude
     });
 };
 export const getTaskById = async (taskId) => {
     return prisma.task.findUnique({
         where: {
             id: taskId
-        }
+        },
+        include: taskInclude
     });
 };
 export const countTasksByProjectIds = async (projectIds) => {

@@ -34,6 +34,19 @@ export const createTaskService = async (data, userId) => {
         throw new AppError("You cannot create task", 403);
     }
 
+    if (data.assigneeId) {
+        const assignee = organization.members.find(
+            (member) => member.id === data.assigneeId
+        );
+
+        if (!assignee) {
+            throw new AppError(
+                "Assignee is not a member of this organization",
+                400
+            );
+        }
+    }
+
     const newTask = await createTask(data);
 
 await createActivityLog({
@@ -43,6 +56,23 @@ await createActivityLog({
     taskId: newTask.id,
     message: `Created task ${newTask.title}`
 });
+
+if (data.assigneeId) {
+    await createActivityLog({
+        action: "TASK_ASSIGNED",
+        organizationId: organization.id,
+        actorId: member.id,
+        taskId: newTask.id,
+        message: `Assigned task to ${newTask.assignee?.user?.name ?? "member"}`
+    });
+
+    await createNotification({
+        type: "TASK_ASSIGNED",
+        title: "New task assigned",
+        message: `You have been assigned task ${newTask.title}`,
+        recipientId: data.assigneeId
+    });
+}
 
 return newTask;
 };

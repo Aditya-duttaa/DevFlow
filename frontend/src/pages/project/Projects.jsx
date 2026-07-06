@@ -51,7 +51,7 @@ export default function Projects() {
 
   useEffect(() => {
     loadProjects();
-  }, [currentOrganization]);
+  }, [currentOrganization?.id]);
 
   async function create(e) {
     e.preventDefault();

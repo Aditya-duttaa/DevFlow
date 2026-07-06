@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import useWorkspaceStore from "../../store/workspaceStore";
+import MemberPicker from "../../components/member/MemberPicker";
 
 import {
   createTask,
@@ -22,6 +23,7 @@ export default function Tasks() {
   const navigate = useNavigate();
 
   const {
+    currentOrganization,
     currentProject,
     currentMember,
   } = useWorkspaceStore();
@@ -34,6 +36,7 @@ export default function Tasks() {
   const [form, setForm] = useState({
     title: "",
     description: "",
+    assigneeId: "",
   });
 
   async function loadTasks() {
@@ -74,6 +77,7 @@ export default function Tasks() {
       await createTask({
         ...form,
         projectId: currentProject.id,
+        assigneeId: form.assigneeId || undefined,
       });
 
       toast.success(
@@ -83,6 +87,7 @@ export default function Tasks() {
       setForm({
         title: "",
         description: "",
+        assigneeId: "",
       });
 
       loadTasks();
@@ -201,7 +206,18 @@ export default function Tasks() {
             }
           />
 
-          <button className="bg-indigo-600 text-white px-6 py-3 rounded-lg">
+          <MemberPicker
+            members={currentOrganization?.members ?? []}
+            selectedMemberId={form.assigneeId}
+            onSelect={(assigneeId) =>
+              setForm({
+                ...form,
+                assigneeId,
+              })
+            }
+          />
+
+          <button className="mt-4 bg-indigo-600 text-white px-6 py-3 rounded-lg">
             Create Task
           </button>
 
@@ -252,6 +268,16 @@ export default function Tasks() {
                       <p className="text-gray-500 mt-2 text-sm">
                         {task.description ||
                           "No description"}
+                      </p>
+
+                      <p className="text-sm mt-3">
+                        <span className="text-gray-500">
+                          Assigned to:
+                        </span>{" "}
+                        <span className="font-medium">
+                          {task.assignee?.user?.name ||
+                            "Unassigned"}
+                        </span>
                       </p>
 
                       <div className="flex gap-2 mt-5">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import useAuthStore from "../../store/authStore";
@@ -10,14 +11,18 @@ import {
   getOrganization,
 } from "../../api/organizationApi";
 
-import CreateOrganizationModal from "../../components/organization/CreateOrganizationModal";
+import CreateOrganizationModal from "../../components/organization/CreateOrganizationModel";
 import OrganizationCard from "../../components/organization/OrganizationCard";
 
 export default function Organizations() {
-  const {
-    setCurrentOrganization,
-    setCurrentMember,
-  } = useWorkspaceStore();
+  const navigate = useNavigate();
+
+  const setCurrentOrganization = useWorkspaceStore(
+    (state) => state.setCurrentOrganization
+  );
+  const setCurrentMember = useWorkspaceStore(
+    (state) => state.setCurrentMember
+  );
 
   const user = useAuthStore((state) => state.user);
 

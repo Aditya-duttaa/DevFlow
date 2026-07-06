@@ -1,4 +1,3 @@
-import { Navigate } from "react-router-dom";
 import useWorkspaceStore from "../store/workspaceStore";
 
 export default function RoleGuard({
@@ -11,8 +10,18 @@ export default function RoleGuard({
   } = useWorkspaceStore();
 
   if (!currentOrganization) {
-    return <Navigate to="/" replace />;
-  }
+  return (
+    <div className="p-10 text-center">
+      <h1 className="text-2xl font-bold">
+        No Organization Selected
+      </h1>
+
+      <p className="text-gray-500 mt-2">
+        Please select an organization first.
+      </p>
+    </div>
+  );
+}
 
   if (
     !currentMember ||

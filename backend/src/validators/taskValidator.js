@@ -14,7 +14,12 @@ export const createTaskSchema = z.object({
 
     projectId: z
         .string()
-        .uuid("Invalid project id")
+        .uuid("Invalid project id"),
+
+    assigneeId: z
+        .string()
+        .uuid("Invalid assignee id")
+        .optional()
 });
 
 export const updateTaskStatusSchema = z.object({

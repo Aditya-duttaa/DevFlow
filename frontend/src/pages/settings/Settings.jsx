@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
-import useAuthStore from "../../store/useAuthStore";
+import useAuthStore from "../../store/authStore";
 import useWorkspaceStore from "../../store/workspaceStore";
 
 export default function Settings() {

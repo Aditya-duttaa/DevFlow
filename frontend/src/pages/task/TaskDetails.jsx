@@ -7,7 +7,11 @@ import {
   updateTask,
   changeTaskStatus,
   deleteTask,
+  assignTask,
+  unassignTask,
 } from "../../api/taskApi";
+import useWorkspaceStore from "../../store/workspaceStore";
+import MemberPicker from "../../components/member/MemberPicker";
 
 import {
   getComments,
@@ -31,6 +35,10 @@ const statuses = [
 
 export default function TaskDetails() {
   const { taskId } = useParams();
+  const {
+    currentOrganization,
+    currentMember,
+  } = useWorkspaceStore();
 
   const [task, setTask] = useState(null);
 
@@ -131,6 +139,27 @@ export default function TaskDetails() {
     } catch {
       toast.error(
         "Failed to update"
+      );
+    }
+  }
+
+  async function updateAssignee(assigneeId) {
+    try {
+      const updated = assigneeId
+        ? await assignTask(task.id, assigneeId)
+        : await unassignTask(task.id);
+
+      setTask(updated);
+
+      toast.success(
+        assigneeId
+          ? "Task assigned"
+          : "Task unassigned"
+      );
+    } catch (e) {
+      toast.error(
+        e.response?.data?.message ||
+          "Failed to update assignee"
       );
     }
   }
@@ -296,6 +325,11 @@ export default function TaskDetails() {
     );
   }
 
+  const canAssign =
+    currentMember?.role === "OWNER" ||
+    currentMember?.role === "ADMIN" ||
+    currentMember?.role === "MANAGER";
+
   return (
     <div className="space-y-8">
 
@@ -393,6 +427,26 @@ export default function TaskDetails() {
             ))}
           </select>
 
+        </div>
+
+        <div className="mt-8">
+          {canAssign ? (
+            <MemberPicker
+              members={currentOrganization?.members ?? []}
+              selectedMemberId={task.assigneeId || ""}
+              onSelect={updateAssignee}
+            />
+          ) : (
+            <div>
+              <label className="font-semibold">
+                Assignee
+              </label>
+              <p className="mt-2 text-gray-600">
+                {task.assignee?.user?.name ||
+                  "Unassigned"}
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="mt-8 flex gap-4">

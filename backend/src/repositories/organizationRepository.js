@@ -1,5 +1,20 @@
 import prisma from "../config/prisma.js";
 
+const organizationMemberInclude = {
+    members: {
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    avatarUrl: true
+                }
+            }
+        }
+    }
+};
+
 export const findOrganizationBySlug = async (slug) => {
     return prisma.organization.findUnique({
         where: {
@@ -50,20 +65,7 @@ export const findOrganizationById = async (organizationId) => {
         where: {
             id: organizationId
         },
-        include: {
-            members: {
-                include: {
-                    user: {
-                        select: {
-                            id: true,
-                            name: true,
-                            email: true,
-                            avatarUrl: true
-                        }
-                    }
-                }
-            }
-        }
+        include: organizationMemberInclude
     });
 };
 
@@ -72,7 +74,8 @@ export const updateOrganizationById = async (organizationId, data) => {
         where: {
             id: organizationId
         },
-        data
+        data,
+        include: organizationMemberInclude
     });
 };
 

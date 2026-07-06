@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import useAuthStore from "../../store/useAuthStore";
+import useAuthStore from "../../store/authStore";
 import { getCurrentUser } from "../../api/authApi";
 
 export default function Profile() {

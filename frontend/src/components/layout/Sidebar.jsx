@@ -7,6 +7,7 @@ import {
   Activity,
   User,
   Settings,
+  Users,
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
@@ -21,6 +22,11 @@ const links = [
     name: "Organization",
     icon: Building2,
     path: "/organizations",
+  },
+  {
+    name: "Members",
+    icon: Users,
+    path: "/organization",
   },
   {
     name: "Projects",

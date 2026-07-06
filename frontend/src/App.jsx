@@ -14,19 +14,24 @@ import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 
 import Dashboard from "./pages/dashboard/Dashboard";
+import Organizations from "./pages/organization/Organizations";
 import Projects from "./pages/project/Projects";
 import Tasks from "./pages/task/Tasks";
 import TaskDetails from "./pages/task/TaskDetails";
 import Notifications from "./pages/notification/Notifications";
 import Activity from "./pages/activity/Activity";
 import OrganizationDetails from "./pages/organization/OrganizationDetails";
+import Profile from "./pages/profile/Profile";
+import Settings from "./pages/settings/Settings";
 
 /* 🔥 NEW: Org Guard */
 function OrgGuard({ children }) {
-  const { currentOrganization } = useWorkspaceStore();
+  const currentOrganization = useWorkspaceStore(
+    (state) => state.currentOrganization
+  );
 
   if (!currentOrganization) {
-    return <Navigate to="/organization" replace />;
+    return <Navigate to="/organizations" replace />;
   }
 
   return children;
@@ -53,6 +58,8 @@ export default function App() {
           </ProtectedRoute>
         }
       >
+        <Route path="/organizations" element={<Organizations />} />
+
         <Route
           path="/"
           element={
@@ -107,10 +114,13 @@ export default function App() {
           }
         />
 
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
+
         <Route
           path="/organization"
           element={
-            <RoleGuard allowedRoles={["OWNER", "ADMIN"]}>
+            <RoleGuard>
               <OrganizationDetails />
             </RoleGuard>
           }

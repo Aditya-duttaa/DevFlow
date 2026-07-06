@@ -37,36 +37,36 @@ export default function OrganizationDetails() {
     });
 
   async function loadOrganization() {
-    if (!currentOrganization?.id) return;
+  if (!currentOrganization?.id) return;
 
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      const data = await getOrganization(
-        currentOrganization.id
-      );
+    const data = await getOrganization(
+      currentOrganization.id
+    );
 
-      setOrganization(data);
-
-      setCurrentOrganization(data);
-
-      setEditForm({
-        name: data.name,
-        description: data.description || "",
-      });
-    } catch (e) {
-      toast.error(
-        e.response?.data?.message ||
-          "Failed to load organization"
-      );
-    } finally {
-      setLoading(false);
-    }
+    setOrganization(data);
+    setCurrentOrganization(data);
+    setEditForm({
+      name: data.name,
+      description: data.description || "",
+    });
+  } catch (e) {
+    toast.error(
+      e.response?.data?.message ||
+        "Failed to load organization"
+    );
+  } finally {
+    setLoading(false);
   }
+}
 
-  useEffect(() => {
+useEffect(() => {
+  if (currentOrganization?.id) {
     loadOrganization();
-  }, [currentOrganization]);
+  }
+}, [currentOrganization?.id]);
 
   async function saveOrganization(e) {
     e.preventDefault();

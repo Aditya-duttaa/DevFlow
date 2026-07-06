@@ -4,25 +4,23 @@ import { toast } from "sonner";
 import useWorkspaceStore from "../../store/workspaceStore";
 import { getDashboard } from "../../api/dashboardApi";
 import DashboardCard from "../../components/dashboard/DashboardCard";
-import { useNavigate } from "react-router-dom";
-
 
 export default function Dashboard() {
-  const { currentOrganization } =
-    useWorkspaceStore();
+  const currentOrganization = useWorkspaceStore(
+    (state) => state.currentOrganization
+  );
 
   const [loading, setLoading] =
     useState(true);
-  const navigate = useNavigate();
 
   const [stats, setStats] =
     useState(null);
 
   useEffect(() => {
-    if (currentOrganization) {
+    if (currentOrganization?.id) {
       loadDashboard();
     }
-  }, [currentOrganization]);
+  }, [currentOrganization?.id]);
 
   async function loadDashboard() {
     try {
