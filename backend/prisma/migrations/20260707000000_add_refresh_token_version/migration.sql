@@ -1,0 +1,4 @@
+-- This migration was superseded by 20260707000000_add_auth_tokens_and_preferences.
+-- The production session implementation uses the RefreshToken table instead of
+-- a refreshTokenVersion column, so this migration intentionally performs no
+-- schema changes.

@@ -12,6 +12,7 @@ import {
 } from "../../api/taskApi";
 import useWorkspaceStore from "../../store/workspaceStore";
 import MemberPicker from "../../components/member/MemberPicker";
+import { getOrganization } from "../../api/organizationApi";
 
 import {
   getComments,
@@ -38,6 +39,8 @@ export default function TaskDetails() {
   const {
     currentOrganization,
     currentMember,
+    setCurrentOrganizationDetails,
+    setCurrentMember,
   } = useWorkspaceStore();
 
   const [task, setTask] = useState(null);
@@ -103,6 +106,46 @@ export default function TaskDetails() {
   useEffect(() => {
     loadData();
   }, [taskId]);
+
+  useEffect(() => {
+    async function loadOrganizationMembers() {
+      if (!currentOrganization?.id) return;
+
+      const hasMemberUsers = currentOrganization.members?.some(
+        (member) => member.user
+      );
+
+      if (hasMemberUsers) return;
+
+      try {
+        const organization = await getOrganization(
+          currentOrganization.id
+        );
+
+        setCurrentOrganizationDetails(organization);
+
+        const refreshedMember =
+          organization.members.find(
+            (member) => member.id === currentMember?.id
+          ) || currentMember;
+
+        if (refreshedMember) {
+          setCurrentMember(refreshedMember);
+        }
+      } catch {
+        toast.error("Failed to load organization members");
+      }
+    }
+
+    loadOrganizationMembers();
+  }, [
+    currentMember,
+    currentMember?.id,
+    currentOrganization?.id,
+    currentOrganization?.members,
+    setCurrentMember,
+    setCurrentOrganizationDetails,
+  ]);
 
   async function saveTask() {
     try {

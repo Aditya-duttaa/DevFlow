@@ -10,6 +10,8 @@ import activityRoutes from "./activityRoutes.js";
 import dashboardRoutes from "./dashboardRoutes.js";
 import attachmentRoutes from "./attachmentRoutes.js";
 import notificationRoutes from "./notificationRoutes.js";
+import profileRoutes from "./profileRoutes.js";
+import preferenceRoutes from "./preferenceRoutes.js";
 
 const router = Router();
 router.use("/auth", authRoutes);
@@ -47,4 +49,6 @@ router.use("/activities", activityRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/attachments", attachmentRoutes);
 router.use("/notifications", notificationRoutes);
+router.use("/profile", profileRoutes);
+router.use("/preferences", preferenceRoutes);
 export default router;

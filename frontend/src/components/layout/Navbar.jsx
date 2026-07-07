@@ -1,6 +1,7 @@
 import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import { logout as logoutRequest } from "../../api/authApi";
 import useAuthStore from "../../store/authStore";
 import useWorkspaceStore from "../../store/workspaceStore";
 
@@ -12,7 +13,13 @@ export default function Navbar() {
   const { clearWorkspace } =
     useWorkspaceStore();
 
-  function handleLogout() {
+  async function handleLogout() {
+    try {
+      await logoutRequest();
+    } catch {
+      // Local logout should still complete if the session is already gone.
+    }
+
     logout();
     clearWorkspace();
     navigate("/login");

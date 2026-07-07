@@ -14,6 +14,14 @@ const useWorkspaceStore = create((set) => ({
     });
   },
 
+  setCurrentOrganizationDetails: (organization) => {
+    localStorage.setItem("org", JSON.stringify(organization));
+
+    set({
+      currentOrganization: organization,
+    });
+  },
+
   setCurrentMember: (member) => {
     localStorage.setItem("member", JSON.stringify(member));
 

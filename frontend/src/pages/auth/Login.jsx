@@ -151,6 +151,13 @@ export default function Login() {
 
       </form>
 
+      <Link
+        to="/forgot-password"
+        className="mt-4 block text-center text-indigo-600 hover:underline"
+      >
+        Forgot password?
+      </Link>
+
       <p className="text-center mt-6">
 
         Don't have an account?

@@ -25,11 +25,22 @@ export default function MemberPicker({
     });
   }, [members, search]);
 
+  const selectedMember =
+    members.find((member) => member.id === selectedMemberId) ||
+    null;
+
   return (
     <div>
       <label className="font-semibold block mb-2">
         {label}
       </label>
+
+      <div className="mb-3 rounded-lg bg-slate-50 px-4 py-3 text-sm">
+        <span className="text-gray-500">Selected: </span>
+        <span className="font-medium">
+          {selectedMember?.user?.name ?? emptyLabel}
+        </span>
+      </div>
 
       <input
         className="border rounded-lg p-3 w-full mb-3"
