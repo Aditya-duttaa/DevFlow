@@ -5,8 +5,10 @@ import { validate } from "../middlewares/validate.js";
 import {
     changePasswordController,
     getProfileController,
+    uploadProfileAvatarController,
     updateProfileController
 } from "../controllers/profileController.js";
+import upload from "../middlewares/upload.js";
 import {
     changePasswordSchema,
     updateProfileSchema
@@ -28,6 +30,13 @@ router.patch(
     protect,
     validate(changePasswordSchema),
     changePasswordController
+);
+
+router.patch(
+    "/avatar",
+    protect,
+    upload.single("avatar"),
+    uploadProfileAvatarController
 );
 
 export default router;

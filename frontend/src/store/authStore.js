@@ -6,7 +6,16 @@ const useAuthStore = create((set) => ({
   isAuthenticated: !!localStorage.getItem("accessToken"),
 
   login: (user, token) => {
+    const previousUserId = localStorage.getItem("authUserId");
+
+    if (previousUserId && previousUserId !== user?.id) {
+      localStorage.removeItem("org");
+      localStorage.removeItem("member");
+      localStorage.removeItem("workspaceUserId");
+    }
+
     localStorage.setItem("accessToken", token);
+    localStorage.setItem("authUserId", user?.id || "");
 
     set({
       user,
@@ -17,6 +26,7 @@ const useAuthStore = create((set) => ({
 
   logout: () => {
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("authUserId");
 
     set({
       user: null,
@@ -26,9 +36,15 @@ const useAuthStore = create((set) => ({
   },
 
   setUser: (user) =>
-    set({
-      user,
-    }),
+    {
+      if (user?.id) {
+        localStorage.setItem("authUserId", user.id);
+      }
+
+      set({
+        user,
+      });
+    },
 
   hydrate: () => {
     const token = localStorage.getItem("accessToken");

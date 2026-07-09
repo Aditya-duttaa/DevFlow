@@ -10,8 +10,16 @@ import {
     findAttachmentById,
     deleteAttachment
 } from "../repositories/attachmentRepository.js";
+import {
+    deleteFileFromCloudinary,
+    uploadFileToCloudinary
+} from "./cloudinaryService.js";
 
-export const createAttachmentService = async (data, currentUserId) => {
+export const createAttachmentService = async (
+    data,
+    file,
+    currentUserId
+) => {
     const task = await findTaskById(data.taskId);
 
     if (!task) {
@@ -29,11 +37,17 @@ export const createAttachmentService = async (data, currentUserId) => {
         throw new AppError("Forbidden", 403);
     }
 
+    const uploadedFile = await uploadFileToCloudinary(
+        file,
+        "devflow/tasks"
+    );
+
     return createAttachment({
-        fileName: data.fileName,
-        fileUrl: data.fileUrl,
-        fileType: data.fileType,
-        fileSize: data.fileSize,
+        fileName: file.originalname,
+        fileUrl: uploadedFile.secure_url,
+        publicId: uploadedFile.public_id,
+        fileType: file.mimetype,
+        fileSize: file.size,
         taskId: data.taskId,
         uploadedById: member.id
     });
@@ -85,6 +99,8 @@ export const deleteAttachmentService = async (
     if (attachment.uploadedById !== member.id) {
         throw new AppError("You can only delete your own attachments", 403);
     }
+
+    await deleteFileFromCloudinary(attachment.publicId);
 
     return deleteAttachment(attachmentId);
 };

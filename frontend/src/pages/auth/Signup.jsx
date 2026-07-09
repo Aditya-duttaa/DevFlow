@@ -30,7 +30,7 @@ export default function Signup() {
     try {
       await signup(values);
 
-      toast.success("Account created. Please verify your email.");
+      toast.success("Account created successfully");
 
       navigate("/login", {
         replace: true,

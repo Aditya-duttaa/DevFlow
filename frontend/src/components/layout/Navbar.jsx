@@ -2,6 +2,7 @@ import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { logout as logoutRequest } from "../../api/authApi";
+import { queryClient } from "../../lib/queryClient";
 import useAuthStore from "../../store/authStore";
 import useWorkspaceStore from "../../store/workspaceStore";
 
@@ -22,6 +23,7 @@ export default function Navbar() {
 
     logout();
     clearWorkspace();
+    queryClient.clear();
     navigate("/login");
   }
 

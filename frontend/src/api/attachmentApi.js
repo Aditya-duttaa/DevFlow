@@ -6,7 +6,17 @@ export const getAttachments = async (taskId) => {
 };
 
 export const createAttachment = async (data) => {
-  const res = await api.post("/attachments", data);
+  const formData = new FormData();
+
+  formData.append("taskId", data.taskId);
+  formData.append("file", data.file);
+
+  const res = await api.post("/attachments", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
   return res.data.data;
 };
 

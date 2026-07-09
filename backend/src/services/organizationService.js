@@ -1,5 +1,5 @@
 import AppError from "../utils/AppError.js";
-import { findUserByEmail } from "../repositories/userRepository.js";
+import { findUserByEmail, findUserById } from "../repositories/userRepository.js";
 import {
     createOrganizationWithOwner,
     findOrganizationBySlug,
@@ -84,7 +84,7 @@ export const updateOrganization = async (organizationId, userId, data) => {
 export const inviteMember = async (
     organizationId,
     currentUserId,
-    email,
+    user,
     role
 ) => {
     const organization = await findOrganizationById(organizationId);
@@ -105,7 +105,9 @@ export const inviteMember = async (
         throw new AppError("Only owner or admin can invite members", 403);
     }
 
-    const userToInvite = await findUserByEmail(email);
+    const userToInvite = user.userId
+        ? await findUserById(user.userId)
+        : await findUserByEmail(user.email);
 
     if (!userToInvite) {
         throw new AppError("User not found", 404);

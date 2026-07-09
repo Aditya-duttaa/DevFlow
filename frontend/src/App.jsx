@@ -3,6 +3,7 @@ import { useEffect } from "react";
 
 import useAuthStore from "./store/authStore";
 import useWorkspaceStore from "./store/workspaceStore";
+import { getMe } from "./api/authApi";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import RoleGuard from "./routes/RoleGuard";
@@ -12,9 +13,6 @@ import AuthLayout from "./layouts/AuthLayout";
 
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
-import ForgotPassword from "./pages/auth/ForgotPassword";
-import ResetPassword from "./pages/auth/ResetPassword";
-import VerifyEmail from "./pages/auth/VerifyEmail";
 
 import Dashboard from "./pages/dashboard/Dashboard";
 import Organizations from "./pages/organization/Organizations";
@@ -42,7 +40,44 @@ function OrgGuard({ children }) {
 
 export default function App() {
   useEffect(() => {
-    useAuthStore.getState().hydrate();
+    async function hydrateSession() {
+      const token = localStorage.getItem("accessToken");
+
+      useAuthStore.getState().hydrate();
+
+      if (!token) {
+        useWorkspaceStore.getState().clearWorkspace();
+        return;
+      }
+
+      try {
+        const user = await getMe();
+        const currentUser = user.user || user.data || user;
+        const authUserId = localStorage.getItem("authUserId");
+        const workspaceUserId = localStorage.getItem("workspaceUserId");
+
+        if (
+          authUserId &&
+          authUserId !== currentUser.id
+        ) {
+          useWorkspaceStore.getState().clearWorkspace();
+        }
+
+        if (
+          workspaceUserId &&
+          workspaceUserId !== currentUser.id
+        ) {
+          useWorkspaceStore.getState().clearWorkspace();
+        }
+
+        useAuthStore.getState().setUser(currentUser);
+      } catch {
+        useAuthStore.getState().logout();
+        useWorkspaceStore.getState().clearWorkspace();
+      }
+    }
+
+    hydrateSession();
   }, []);
 
   return (
@@ -51,9 +86,6 @@ export default function App() {
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
       </Route>
 
       {/* Protected */}

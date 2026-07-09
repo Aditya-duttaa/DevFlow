@@ -7,7 +7,9 @@ import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 import { login, getMe } from "../../api/authApi";
+import { queryClient } from "../../lib/queryClient";
 import useAuthStore from "../../store/authStore";
+import useWorkspaceStore from "../../store/workspaceStore";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -19,6 +21,9 @@ export default function Login() {
 
   const { login: loginStore } =
     useAuthStore();
+  const clearWorkspace = useWorkspaceStore(
+    (state) => state.clearWorkspace
+  );
 
   const [showPassword, setShowPassword] =
     useState(false);
@@ -36,6 +41,9 @@ export default function Login() {
 
   async function onSubmit(values) {
     try {
+      queryClient.clear();
+      clearWorkspace();
+
       const res = await login(values);
 
       const token =
@@ -150,13 +158,6 @@ export default function Login() {
         </button>
 
       </form>
-
-      <Link
-        to="/forgot-password"
-        className="mt-4 block text-center text-indigo-600 hover:underline"
-      >
-        Forgot password?
-      </Link>
 
       <p className="text-center mt-6">
 

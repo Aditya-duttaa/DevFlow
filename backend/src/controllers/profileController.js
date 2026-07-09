@@ -1,6 +1,7 @@
 import {
     changePasswordService,
     getProfileService,
+    uploadProfileAvatarService,
     updateProfileService
 } from "../services/profileService.js";
 
@@ -44,6 +45,22 @@ export const changePasswordController = async (req, res, next) => {
         res.status(200).json({
             success: true,
             message: "Password changed successfully"
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const uploadProfileAvatarController = async (req, res, next) => {
+    try {
+        const user = await uploadProfileAvatarService(
+            req.user.id,
+            req.file
+        );
+
+        res.status(200).json({
+            success: true,
+            data: user
         });
     } catch (error) {
         next(error);

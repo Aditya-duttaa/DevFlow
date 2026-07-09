@@ -9,6 +9,7 @@ import {
 } from "../repositories/userRepository.js";
 import { revokeAllRefreshTokensExceptHash } from "../repositories/tokenRepository.js";
 import { hashToken } from "../utils/secureToken.js";
+import { uploadFileToCloudinary } from "./cloudinaryService.js";
 import {
     changePasswordSchema,
     updateProfileSchema
@@ -95,4 +96,25 @@ export const changePasswordService = async (
     }
 
     return updatedUser;
+};
+
+export const uploadProfileAvatarService = async (userId, file) => {
+    const user = await findUserById(userId);
+
+    if (!user) {
+        throw new AppError("User not found", 404);
+    }
+
+    if (!file?.mimetype?.startsWith("image/")) {
+        throw new AppError("Avatar must be an image", 400);
+    }
+
+    const uploadedFile = await uploadFileToCloudinary(
+        file,
+        "devflow/profile"
+    );
+
+    return updateUser(userId, {
+        avatarUrl: uploadedFile.secure_url
+    });
 };

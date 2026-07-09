@@ -7,6 +7,22 @@ const api = axios.create({
   withCredentials: true,
 });
 
+let isRefreshing = false;
+let refreshQueue = [];
+
+function resolveRefreshQueue(error, token = null) {
+  refreshQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+      return;
+    }
+
+    resolve(token);
+  });
+
+  refreshQueue = [];
+}
+
 api.interceptors.request.use((config) => {
   const token =
     localStorage.getItem("accessToken");
@@ -29,6 +45,21 @@ api.interceptors.response.use(
     ) {
       originalRequest._retry = true;
 
+      if (isRefreshing) {
+        try {
+          const token = await new Promise((resolve, reject) => {
+            refreshQueue.push({ resolve, reject });
+          });
+
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return api(originalRequest);
+        } catch (e) {
+          return Promise.reject(e);
+        }
+      }
+
+      isRefreshing = true;
+
       try {
         const response = await axios.post(
           `${api.defaults.baseURL}/auth/refresh`,
@@ -47,17 +78,25 @@ api.interceptors.response.use(
           accessToken
         );
 
+        resolveRefreshQueue(null, accessToken);
+
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 
         return api(originalRequest);
       } catch (e) {
+        resolveRefreshQueue(e, null);
+
         localStorage.removeItem(
           "accessToken"
         );
+        localStorage.removeItem("org");
+        localStorage.removeItem("member");
 
         window.location.replace("/login");
 
         return Promise.reject(e);
+      } finally {
+        isRefreshing = false;
       }
     }
 

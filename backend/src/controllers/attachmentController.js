@@ -8,6 +8,7 @@ export const createAttachmentController = async (req, res, next) => {
     try {
         const attachment = await createAttachmentService(
             req.body,
+            req.file,
             req.user.id
         );
 

@@ -1,15 +1,11 @@
 import {
     createRefreshSession,
-    forgotPasswordService,
     loginUser,
     logoutAllSessions,
     logoutSession,
-    resendVerificationService,
-    resetPasswordService,
     rotateRefreshSession,
     signupUser,
-    getCurrentUser,
-    verifyEmailService
+    getCurrentUser
 } from "../services/authService.js";
 import { generateAccessToken } from "../utils/token.js";
 
@@ -149,54 +145,30 @@ export const logoutAll = async (req, res, next) => {
     }
 };
 
-export const forgotPassword = async (req, res, next) => {
-    try {
-        const result = await forgotPasswordService(req.body.email);
-
-        res.status(200).json({
-            success: true,
-            message: result.message
-        });
-    } catch (error) {
-        next(error);
-    }
+export const forgotPassword = async (req, res) => {
+    res.status(404).json({
+        success: false,
+        message: "Forgot password is disabled"
+    });
 };
 
-export const resetPassword = async (req, res, next) => {
-    try {
-        await resetPasswordService(req.body);
-
-        res.status(200).json({
-            success: true,
-            message: "Password reset successfully"
-        });
-    } catch (error) {
-        next(error);
-    }
+export const resetPassword = async (req, res) => {
+    res.status(404).json({
+        success: false,
+        message: "Reset password is disabled"
+    });
 };
 
-export const verifyEmail = async (req, res, next) => {
-    try {
-        await verifyEmailService(req.query.token);
-
-        res.status(200).json({
-            success: true,
-            message: "Email verified successfully"
-        });
-    } catch (error) {
-        next(error);
-    }
+export const verifyEmail = async (req, res) => {
+    res.status(404).json({
+        success: false,
+        message: "Email verification is disabled"
+    });
 };
 
-export const resendVerification = async (req, res, next) => {
-    try {
-        await resendVerificationService(req.body.email);
-
-        res.status(200).json({
-            success: true,
-            message: "If the account needs verification, a new email has been sent."
-        });
-    } catch (error) {
-        next(error);
-    }
+export const resendVerification = async (req, res) => {
+    res.status(404).json({
+        success: false,
+        message: "Email verification is disabled"
+    });
 };

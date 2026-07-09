@@ -27,28 +27,6 @@ export const getMe = async () => {
 
 export const getCurrentUser = getMe;
 
-export const forgotPassword = async (data) => {
-  const res = await api.post("/auth/forgot-password", data);
-  return res.data;
-};
-
-export const resetPassword = async (data) => {
-  const res = await api.post("/auth/reset-password", data);
-  return res.data;
-};
-
-export const verifyEmail = async (token) => {
-  const res = await api.get("/auth/verify-email", {
-    params: { token },
-  });
-  return res.data;
-};
-
-export const resendVerification = async (data) => {
-  const res = await api.post("/auth/resend-verification", data);
-  return res.data;
-};
-
 export const logoutAll = async () => {
   const res = await api.post("/auth/logout-all");
   return res.data;

@@ -34,6 +34,37 @@ export const findUserByIdWithPassword = async (id) => {
     });
 };
 
+export const searchUsers = async (query, limit = 10) => {
+    return prisma.user.findMany({
+        where: {
+            OR: [
+                {
+                    name: {
+                        contains: query,
+                        mode: "insensitive"
+                    }
+                },
+                {
+                    email: {
+                        contains: query,
+                        mode: "insensitive"
+                    }
+                }
+            ]
+        },
+        take: limit,
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true
+        },
+        orderBy: {
+            name: "asc"
+        }
+    });
+};
+
 export const findUserByIdForRefresh = async (id) => {
     return prisma.user.findUnique({
         where: {

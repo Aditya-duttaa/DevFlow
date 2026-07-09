@@ -32,13 +32,22 @@ export const addMemberSchema = z.object({
         .string()
         .trim()
         .toLowerCase()
-        .email(),
+        .email()
+        .optional(),
+
+    userId: z
+        .string()
+        .uuid("Invalid user id")
+        .optional(),
 
     role: z.enum([
         "ADMIN",
         "MANAGER",
         "DEVELOPER"
     ]).default("DEVELOPER")
+}).refine((data) => data.email || data.userId, {
+    message: "User is required",
+    path: ["userId"]
 });
 
 export const updateMemberRoleSchema = z.object({

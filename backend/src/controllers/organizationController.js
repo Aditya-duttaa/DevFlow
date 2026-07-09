@@ -73,7 +73,10 @@ export const inviteMemberController = async (req, res, next) => {
         const member = await inviteMember(
             req.params.organizationId,
             req.user.id,
-            req.body.email,
+            {
+                email: req.body.email,
+                userId: req.body.userId
+            },
             req.body.role
         );
 
