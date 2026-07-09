@@ -51,11 +51,6 @@ export default function Activity() {
                   <p className="mt-2 text-gray-600">
                     {activity.message}
                   </p>
-                  {activity.actor && (
-                    <p className="mt-3 text-sm text-gray-500">
-                      By {activity.actor.user?.name ?? "Unknown"}
-                    </p>
-                  )}
                 </div>
                 <span className="text-xs text-gray-400 whitespace-nowrap">
                   {new Date(activity.createdAt).toLocaleString()}
