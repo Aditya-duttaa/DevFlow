@@ -45,7 +45,7 @@ export default function Login() {
       clearWorkspace();
 
       const res = await login(values);
-
+      console.log("onSubmit called", values);
       const token =
         res.accessToken ||
         res.token ||
