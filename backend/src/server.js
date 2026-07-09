@@ -12,11 +12,32 @@ dotenv.config();
 
 const app = express();
 
+app.set("trust proxy", 1);
+
+const allowedOrigins = (process.env.FRONTEND_URL || "")
+    .split(",")
+    .map((origin) => origin.trim().replace(/\/$/, ""))
+    .filter(Boolean);
+
 app.use(helmet());
-app.use(cors({
-    origin:  process.env.FRONTEND_URL,
-    credentials: true
-}));
+app.use(
+    cors({
+        origin: (origin, callback) => {
+            if (!origin) {
+                return callback(null, true);
+            }
+
+            const normalizedOrigin = origin.replace(/\/$/, "");
+
+            if (allowedOrigins.includes(normalizedOrigin)) {
+                return callback(null, true);
+            }
+
+            return callback(new Error("Not allowed by CORS"));
+        },
+        credentials: true
+    })
+);
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(cookieParser());

@@ -11,9 +11,17 @@ import { generateAccessToken } from "../utils/token.js";
 
 const refreshCookieOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    secure: true,
+    sameSite: "none",
+    path: "/",
     maxAge: 7 * 24 * 60 * 60 * 1000
+};
+
+const clearRefreshCookieOptions = {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    path: "/"
 };
 
 const getRequestMeta = (req) => ({
@@ -84,11 +92,7 @@ export const logout = async (req, res, next) => {
     try {
         await logoutSession(req.cookies.refreshToken);
 
-        res.clearCookie("refreshToken", {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict"
-        });
+        res.clearCookie("refreshToken", clearRefreshCookieOptions);
 
         res.status(200).json({
             success: true,
@@ -130,11 +134,7 @@ export const logoutAll = async (req, res, next) => {
     try {
         await logoutAllSessions(req.user.id);
 
-        res.clearCookie("refreshToken", {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict"
-        });
+        res.clearCookie("refreshToken", clearRefreshCookieOptions);
 
         res.status(200).json({
             success: true,
