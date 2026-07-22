@@ -203,8 +203,4 @@ This project helped in understanding:
 ## Author
 
 Aditya Dutta
-
-* LeetCode Rating: 1814
-* Codeforces Specialist (Max Expert)
-* ICPC Regionalist
-* B.Tech Computer Science, BIT Mesra
+B.Tech Computer Science, BIT Mesra
